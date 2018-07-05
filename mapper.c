@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "map.h"
+#include "mapper.h"
 
 int map(const char *string, const mapping *mappings)
 {

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "map.h"
+#include "mapper.h"
 #include "args.h"
 
 enum action_type { set, increment, decrement };
@@ -56,4 +56,3 @@ action *parse_args(int argc, char **argv)
 
 	return action;
 }
-

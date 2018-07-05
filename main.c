@@ -1,20 +1,16 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include "args.h"
+#include "int_file.h"
 
 static const char backlight_directory_path[] = "/sys/class/backlight";
 static char file_path[256];
-static char buffer[32];
 
 static void act(action *action);
 static void act_on(action *action, struct dirent *directory);
-static int read_int(int fd);
 
 int main(int argc, char **argv)
 {
@@ -38,7 +34,7 @@ void act(action *action)
 	DIR *directory = opendir(backlight_directory_path);
 	if (directory == NULL)
 	{
-		fprintf(stderr, "Failed to open %s", backlight_directory_path);
+		fprintf(stderr, "Failed to open %s\n", backlight_directory_path);
 		return;
 	}
 
@@ -61,14 +57,22 @@ void act_on(action *action, struct dirent *directory)
 	// read the maximum brightness
 	sprintf(file_path, "%s/%s/%s", backlight_directory_path, directory->d_name, "max_brightness");
 	int max_brightness_fd = open(file_path, O_RDONLY);
-	if (max_brightness_fd == -1) return;
-	int max_brightness = read_int(max_brightness_fd);
+	if (max_brightness_fd == -1)
+	{
+		fprintf(stderr, "Failed to open %s\n", file_path);
+		return;
+	}
+	int max_brightness = read_int_from_file(max_brightness_fd);
 	close(max_brightness_fd);
 
 	// open the brightness file
 	sprintf(file_path, "%s/%s/%s", backlight_directory_path, directory->d_name, "brightness");
 	int brightness_fd = open(file_path, O_RDWR);
-	if (brightness_fd == -1) return;
+	if (brightness_fd == -1)
+	{
+		fprintf(stderr, "Failed to open %s\n", file_path);
+		return;
+	}
 
 	// figure out what the brightness setting will be
 	int change = (float) max_brightness / 100 * action->change;
@@ -76,28 +80,19 @@ void act_on(action *action, struct dirent *directory)
 
 	if (action->direction != 0)
 	{
-		int brightness = read_int(brightness_fd);
-
-		if (action->direction == 1)
-			new_brightness = brightness + change;
-		else
-			new_brightness = brightness - change;
+		int brightness = read_int_from_file(brightness_fd);
+		new_brightness = brightness + action->direction * change;
 	}
 	else
 		new_brightness = change;
 
-	// TODO ensure 0 <= new_brightness <= max_brightness
+	// ensure 0 <= new_brightness <= max_brightness
+	if (new_brightness < 0)
+		new_brightness = 0;
+	else if (new_brightness > max_brightness)
+		new_brightness = max_brightness;
 
-	int bytes_written = sprintf(buffer, "%d\n", new_brightness);
-	write(brightness_fd, buffer, bytes_written);
-
-	// close the brightness file
+	// write the new brightness to the brightness file and close it
+	write_int_to_file(brightness_fd, new_brightness);
 	close(brightness_fd);
-}
-
-int read_int(int fd)
-{
-	int bytes_read = read(fd, buffer, sizeof(buffer) - 1);
-	buffer[bytes_read] = '\0';
-	return atoi(buffer);
 }

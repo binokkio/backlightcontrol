@@ -40,19 +40,13 @@ action *parse_args(int argc, char **argv)
 
 	// change
 	if (argc > 2)
-	{
 		action->change = atoi(argv[2]);
-	}
 	else
-	{
 		action->change = 5;
-	}
 
 	// target
 	if (argc > 3)
-	{
 		action->target = argv[3];
-	}
 
 	return action;
 }

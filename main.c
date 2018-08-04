@@ -17,13 +17,9 @@ int main(int argc, char **argv)
 	action *action = parse_args(argc, argv);
 
 	if (action == NULL)
-	{
 		printf("Help...\n");
-	}
 	else
-	{
 		act(action);
-	}
 
 	return 0;
 }
@@ -59,7 +55,7 @@ void act_on(action *action, struct dirent *directory)
 	int max_brightness_fd = open(file_path, O_RDONLY);
 	if (max_brightness_fd == -1)
 	{
-		fprintf(stderr, "Failed to open %s\n", file_path);
+		fprintf(stderr, "Failed to read max brightness from %s\n", file_path);
 		return;
 	}
 	int max_brightness = read_int_from_file(max_brightness_fd);

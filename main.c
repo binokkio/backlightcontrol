@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 
 void act(action *action)
 {
-	// open and verify baclight directory
+	// open and verify backight directory
 	DIR *directory = opendir(backlight_directory_path);
 	if (directory == NULL)
 	{

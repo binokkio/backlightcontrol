@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 	action *action = parse_args(argc, argv);
 
 	if (action == NULL)
-		printf("Help...\n");
+		printf("Usage: backlightcontrol set|increment|decrement amount [target]\n");
 	else
 		act(action);
 
@@ -35,6 +35,7 @@ void act(action *action)
 	}
 
 	// iterate entries in backlight directory
+	int acts = 0;
 	struct dirent *entry;
 	while (entry = readdir(directory))
 	{
@@ -42,7 +43,14 @@ void act(action *action)
 		if (action->target != NULL && strcmp(entry->d_name, action->target) != 0) continue;  // skip anything that does not match our target, if we have a target
 
 		act_on(action, entry);
+		acts++;
 	}
+
+	if (!acts)
+		if (action->target != NULL)
+			fprintf(stderr, "Nothing in %s matched target \"%s\"\n", backlight_directory_path, action->target);
+		else
+			fprintf(stderr, "Nothing in %s\n", backlight_directory_path, action->target);
 
 	// close backlight directory
 	closedir(directory);
